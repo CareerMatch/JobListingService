@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceTemplate", "ServiceTemplate\ServiceTemplate.csproj", "{951CC19C-9F49-4DBE-97A0-92A483477614}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JoblistingService", "JoblistingService\JoblistingService.csproj", "{951CC19C-9F49-4DBE-97A0-92A483477614}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

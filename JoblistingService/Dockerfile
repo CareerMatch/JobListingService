@@ -13,10 +13,10 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Copy the .csproj file explicitly from the current directory
-COPY ServiceTemplate.csproj ./
+COPY JoblistingService.csproj ./
 
 # Restore the project’s dependencies
-RUN dotnet restore "ServiceTemplate.csproj"
+RUN dotnet restore "JoblistingService.csproj"
 
 # Copy the rest of the application files to the container
 COPY . .
@@ -25,15 +25,15 @@ COPY . .
 WORKDIR "/src"
 
 # Build the project
-RUN dotnet build "ServiceTemplate.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "JoblistingService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Publish the project
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "ServiceTemplate.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "JoblistingService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # Final stage
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ServiceTemplate.dll"]
+ENTRYPOINT ["dotnet", "JoblistingService.dll"]

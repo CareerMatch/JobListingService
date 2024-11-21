@@ -1,4 +1,3 @@
-# .github/workflows/ci.yml
 name: CI Workflow
 
 on:
@@ -14,19 +13,52 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      # Step 1: Check out code
       - name: Check out code
         uses: actions/checkout@v3
 
+      # Step 2: Set up .NET
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0'  # Replace with your .NET version
 
+      # Step 3: Restore dependencies
       - name: Restore dependencies
         run: dotnet restore
 
+      # Step 4: Build the application
       - name: Build the application
         run: dotnet build --no-restore --configuration Release
 
+      # Step 5: Run tests
       - name: Run tests
         run: dotnet test --no-restore --verbosity normal
+
+      # Step 6: Install SonarCloud scanner
+      - name: Install SonarCloud scanner
+        shell: bash
+        run: |
+          dotnet tool install --global dotnet-sonarscanner
+
+      # Step 7: Begin SonarCloud Analysis
+      - name: SonarCloud Begin Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"CareerMatch_JobListingService" \
+            /o:"careermatch" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+      # Step 8: Rebuild for SonarCloud Analysis
+      - name: Build for SonarCloud
+        run: dotnet build --no-restore --configuration Release
+
+      # Step 9: End SonarCloud Analysis
+      - name: SonarCloud End Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"

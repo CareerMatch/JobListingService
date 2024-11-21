@@ -1,20 +1,9 @@
-namespace TemplateTest;
+namespace JoblistingService.Test;
 
-public class UnitTest1
+public class UnitTest
 {
-
     [Fact]
-    public void String_Concatenation_Test()
+    public void Test1()
     {
-        // Arrange
-        string str1 = "Hello";
-        string str2 = "World";
-
-        // Act
-        string result = $"{str1} {str2}";
-
-        // Assert
-        Assert.Equal("Hello World", result);
     }
-    
 }

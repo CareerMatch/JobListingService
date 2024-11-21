@@ -52,7 +52,7 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.scanner.scanAll=false
 
 

@@ -13,7 +13,7 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 # Copy the .csproj file explicitly from the current directory
-COPY JoblistingService.csproj ./
+COPY ["ProductService.csproj", "."]
 
 # Restore the project’s dependencies
 RUN dotnet restore "JoblistingService.csproj"

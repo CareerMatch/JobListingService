@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - main
   pull_request:
     branches:
       - main
@@ -53,10 +54,14 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" 
-
-
-      # Step 8: Rebuild for SonarCloud Analysis
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.projectBaseDir="JoblistingService" \
+            /d:sonar.tests="JoblistingService.Test" \
+            /d:sonar.exclusions="**/bin/**,**/obj/**,**/node_modules/**"
+        
+        
+        
+        # Step 8: Rebuild for SonarCloud Analysis
       - name: Build for SonarCloud
         run: dotnet build --no-restore --configuration Release
 

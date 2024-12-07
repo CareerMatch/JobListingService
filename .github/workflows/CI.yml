@@ -41,6 +41,7 @@ jobs:
       - name: Install SonarCloud scanner
         shell: bash
         run: |
+          dotnet tool uninstall --global dotnet-sonarscanner
           dotnet tool install --global dotnet-sonarscanner --version 8.0.3
 
       # Step 7: Begin SonarCloud Analysis

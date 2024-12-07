@@ -24,25 +24,25 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0'  # Replace with your .NET version
+          dotnet-version: '8.0'
 
       # Step 3: Restore dependencies
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore JoblistingService.sln
 
       # Step 4: Build the application
       - name: Build the application
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
       # Step 5: Run tests
       - name: Run tests
-        run: dotnet test --no-restore --verbosity normal
+        run: dotnet test JoblistingService.Test/JoblistingService.Test.csproj --no-restore --verbosity normal
 
-      # Step 6: Install SonarCloud scanner
-      - name: Install SonarCloud scanner
+      # Step 6: Install SonarCloud Scanner
+      - name: Install SonarCloud Scanner
         shell: bash
         run: |
-          dotnet tool uninstall --global dotnet-sonarscanner
+          dotnet tool uninstall --global dotnet-sonarscanner || true
           dotnet tool install --global dotnet-sonarscanner --version 8.0.3
 
       # Step 7: Begin SonarCloud Analysis
@@ -55,11 +55,12 @@ jobs:
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-
+            /d:sonar.sources="JoblistingService,JoblistingService.Test" \
+            /d:sonar.exclusions="**/bin/**,**/obj/**"
 
       # Step 8: Rebuild for SonarCloud Analysis
-      - name: Build for SonarCloud
-        run: dotnet build --no-restore --configuration Release
+      - name: Build for SonarCloud Analysis
+        run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
       # Step 9: End SonarCloud Analysis
       - name: SonarCloud End Analysis

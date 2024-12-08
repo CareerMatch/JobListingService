@@ -55,7 +55,6 @@ jobs:
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.sources=.
 
       # Step 8: Rebuild for SonarCloud Analysis
       - name: Build for SonarCloud Analysis

@@ -55,9 +55,7 @@ jobs:
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
-            /d:sonar.sources="JoblistingService,JoblistingService.Test" \
-            /d:sonar.exclusions="**/bin/**,**/obj/**,JoblistingService/Config/MongoDbSettings.cs,JoblistingService/Config/MongoDbContext.cs,JoblistingService/Dockerfile" \
-            /d:sonar.test.exclusions="**/bin/**,**/obj/**"
+            /d:sonar.sources=.
 
       # Step 8: Rebuild for SonarCloud Analysis
       - name: Build for SonarCloud Analysis

@@ -34,18 +34,34 @@ jobs:
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 5: Run tests
-      - name: Run tests
-        run: dotnet test JoblistingService.Test/JoblistingService.Test.csproj --no-restore --verbosity normal
+      # Step 5: Install dotCover
+      - name: Install dotCover
+        run: dotnet tool install -g JetBrains.dotCover.GlobalTool
 
-      # Step 6: Install SonarCloud Scanner
+      # Step 6: Run tests with dotCover
+      - name: Run tests with dotCover
+        run: |
+          dotcover cover \
+          --TargetExecutable="dotnet" \
+          --TargetArguments="test JoblistingService.Test/JoblistingService.Test.csproj --no-restore --verbosity normal" \
+          --Output="coverage.snapshot"
+
+      # Step 7: Generate XML Coverage Report
+      - name: Generate XML Coverage Report
+        run: |
+          dotcover report \
+          --Source="coverage.snapshot" \
+          --Output="coverage.xml" \
+          --ReportType="DetailedXML"
+
+      # Step 8: Install SonarCloud Scanner
       - name: Install SonarCloud Scanner
         shell: bash
         run: |
           dotnet tool uninstall --global dotnet-sonarscanner || true
           dotnet tool install --global dotnet-sonarscanner --version 8.0.3
 
-      # Step 7: Begin SonarCloud Analysis
+      # Step 9: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -54,13 +70,14 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.cs.opencover.reportsPaths="coverage.xml" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-      # Step 8: Rebuild for SonarCloud Analysis
+      # Step 10: Rebuild for SonarCloud Analysis
       - name: Build for SonarCloud Analysis
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 9: End SonarCloud Analysis
+      # Step 11: End SonarCloud Analysis
       - name: SonarCloud End Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

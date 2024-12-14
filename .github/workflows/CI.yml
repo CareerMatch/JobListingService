@@ -19,24 +19,27 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       # Step 2: Set up .NET
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0'
 
-      # Step 3: Restore dependencies
+      # Step 3: Install dotCover
+      - name: Install dotCover
+        run: |
+          dotnet tool install -g JetBrains.dotCover.GlobalTool
+          echo "## Adding dotCover to PATH"
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+      # Step 4: Restore dependencies
       - name: Restore dependencies
         run: dotnet restore JoblistingService.sln
 
-      # Step 4: Build the application
+      # Step 5: Build the application
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
-
-      # Step 5: Install dotCover
-      - name: Install dotCover
-        run: dotnet tool install -g JetBrains.dotCover.GlobalTool
 
       # Step 6: Run tests with dotCover
       - name: Run tests with dotCover

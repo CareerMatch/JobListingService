@@ -1,48 +1,69 @@
-name: CD Workflow
+name: CI Workflow
 
 on:
-  workflow_run:
-    workflows:
-      - CI Workflow
-    types:
-      - completed
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  deploy:
+  build:
     runs-on: self-hosted
-
-    # Ensure this job only runs if the CI Workflow was successful
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
 
     steps:
       # Step 1: Check out code
       - name: Check out code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      # Step 2: Set Environment Variables for Service
-      - name: Set Environment Variables for Service
-        env:
-          SERVICE_FOLDER: "JoblistingService"
-          IMAGE_TAG: "joblisting:v1"
-        run: |
-          echo "SERVICE_FOLDER=${SERVICE_FOLDER}" >> $GITHUB_ENV
-          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+      # Step 2: Set up .NET
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0'
 
-      # Step 3: Build and Push Docker Image
-      - name: Build and Push Docker Image
-        env:
-          APP_UID: 1000
+      # Step 3: Install SonarCloud Scanner
+      - name: Install SonarCloud Scanner
         run: |
-          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker buildx build --platform linux/amd64,linux/arm64 \
-          -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }} ./${{ env.SERVICE_FOLDER }}
-          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }}      
-      
-      # Step 4: Deploy with Docker Compose
-      - name: Deploy with Docker Compose
-        env:
-          MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
-          MONGO_DATABASE_NAME: ${{ secrets.MONGO_DATABASE_NAME }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          dotnet tool uninstall --global dotnet-sonarscanner || true
+          dotnet tool install --global dotnet-sonarscanner --version 5.12.0
+
+      # Step 4: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore JoblistingService.sln
+
+      # Step 5: Build the application
+      - name: Build the application
+        run: dotnet build JoblistingService.sln --no-restore --configuration Release
+
+      # Step 6: Run tests
+      - name: Run tests
         run: |
-          docker-compose -f ./docker-compose.yml up -d
+          dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
+            --results-directory "TestResults"
+
+      # Step 7: Begin SonarCloud Analysis
+      - name: SonarCloud Begin Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin \
+            /k:"CareerMatch_JobListingService" \
+            /o:"careermatch" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      # Step 8: Build for SonarCloud Analysis
+      - name: Build for SonarCloud Analysis
+        run: dotnet build JoblistingService.sln --no-restore --configuration Release
+
+      # Step 9: SonarCloud Analysis - End
+      - name: SonarCloud End Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner end

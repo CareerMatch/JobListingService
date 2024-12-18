@@ -51,16 +51,16 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory "TestResults"
 
-      # Step 8: Convert Coverage Report to Cobertura Format
+            # Step 8: Generate OpenCover Report
       - name: Generate Coverage Report
         run: |
           dotnet tool install --global dotnet-coverage
           dotnet-coverage collect \
-            --output "coveragereport/coverage.cobertura.xml" \
-            --output-format cobertura \
+            --output "coveragereport/coverage.opencover.xml" \
+            --output-format opencover \
             -- dotnet test JoblistingService.Test/JoblistingService.Test.csproj --results-directory "TestResults"
 
-      # Step 9: SonarCloud Analysis - Begin
+      # Step 9: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -69,7 +69,7 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.coverageReportPaths="coveragereport/coverage.cobertura.xml" \
+            /d:sonar.coverageReportPaths="coveragereport/coverage.opencover.xml" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       # Step 10: Build for SonarCloud Analysis

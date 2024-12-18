@@ -26,43 +26,38 @@ jobs:
         with:
           dotnet-version: '8.0'
 
-      # Step 3: Install dotCover
-      - name: Install dotCover
-        run: |
-          dotnet tool install -g JetBrains.dotCover.GlobalTool
-          echo "## Adding dotCover to PATH"
-          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      # Step 3: Install ReportGenerator
+      - name: Install ReportGenerator
+        run: dotnet tool install -g dotnet-reportgenerator-globaltool
 
-      # Step 4: Restore dependencies
+      # Step 4: Install SonarCloud Scanner
+      - name: Install SonarCloud Scanner
+        run: |
+          dotnet tool uninstall --global dotnet-sonarscanner || true
+          dotnet tool install --global dotnet-sonarscanner --version 5.12.0
+
+      # Step 5: Restore dependencies
       - name: Restore dependencies
         run: dotnet restore JoblistingService.sln
 
-      # Step 5: Build the application
+      # Step 6: Build the application
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 6: Run tests with dotCover
-      - name: Run tests with dotCover
+      # Step 7: Run tests with Coverlet for Code Coverage
+      - name: Run tests with Coverlet
         run: |
-          dotcover cover \
-          --TargetExecutable="dotnet" \
-          --TargetArguments="test JoblistingService.Test/JoblistingService.Test.csproj --no-restore --verbosity normal" \
-          --Output="coverage.snapshot"
+          dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
+          --collect:"XPlat Code Coverage" \
+          --results-directory "TestResults"
 
-      # Step 7: Generate XML Coverage Report
-      - name: Generate XML Coverage Report
+      # Step 8: Generate Coverage Report with ReportGenerator
+      - name: Generate Coverage Report
         run: |
-          dotcover report \
-          --Source="coverage.snapshot" \
-          --Output="coverage.xml" \
-          --ReportType="DetailedXML"
-
-      # Step 8: Install SonarCloud Scanner
-      - name: Install SonarCloud Scanner
-        shell: bash
-        run: |
-          dotnet tool uninstall --global dotnet-sonarscanner || true
-          dotnet tool install --global dotnet-sonarscanner --version 8.0.3
+          reportgenerator \
+            -reports:"TestResults/**/coverage.cobertura.xml" \
+            -targetdir:"coveragereport" \
+            -reporttypes:"Cobertura"
 
       # Step 9: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
@@ -73,10 +68,10 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.opencover.reportsPaths="coverage.xml" \
+            /d:sonar.coverageReportPaths="coveragereport/Cobertura.xml" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-      # Step 10: Rebuild for SonarCloud Analysis
+      # Step 10: Build for SonarCloud Analysis
       - name: Build for SonarCloud Analysis
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 

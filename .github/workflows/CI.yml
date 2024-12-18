@@ -26,49 +26,27 @@ jobs:
         with:
           dotnet-version: '8.0'
 
-      # Step 3: Install ReportGenerator
-      - name: Install ReportGenerator
-        run: dotnet tool install --global dotnet-reportgenerator-globaltool
-
-      # Step 4: Install SonarCloud Scanner
+      # Step 3: Install SonarCloud Scanner
       - name: Install SonarCloud Scanner
         run: |
           dotnet tool uninstall --global dotnet-sonarscanner || true
           dotnet tool install --global dotnet-sonarscanner --version 5.12.0
 
-      # Step 5: Restore dependencies
+      # Step 4: Restore dependencies
       - name: Restore dependencies
         run: dotnet restore JoblistingService.sln
 
-      # Step 6: Build the application
+      # Step 5: Build the application
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 7: Run tests with Coverage
-      - name: Run tests with Coverage
+      # Step 6: Run tests
+      - name: Run tests
         run: |
           dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
-            --collect:"XPlat Code Coverage" \
             --results-directory "TestResults"
 
-      # Step 8: Generate OpenCover Report
-      - name: Generate OpenCover Report
-        run: |
-          dotnet tool install --global dotnet-coverage || true
-          dotnet-coverage collect \
-            --output "coveragereport/coverage.opencover.xml" \
-            --output-format opencover \
-            -- dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
-              --results-directory "TestResults" \
-              --no-build
-
-      # Step 9: UTF-8 Encode Coverage Report
-      - name: Encode Coverage Report to UTF-8
-        run: |
-          iconv -f UTF-8 -t UTF-8 -c coveragereport/coverage.opencover.xml -o coveragereport/coverage.encoded.xml
-          mv coveragereport/coverage.encoded.xml coveragereport/coverage.opencover.xml
-
-      # Step 10: Begin SonarCloud Analysis
+      # Step 7: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -77,14 +55,13 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.coverageReportPaths="coveragereport/coverage.opencover.xml" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-      # Step 11: Build for SonarCloud Analysis
+      # Step 8: Build for SonarCloud Analysis
       - name: Build for SonarCloud Analysis
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 12: SonarCloud Analysis - End
+      # Step 9: SonarCloud Analysis - End
       - name: SonarCloud End Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

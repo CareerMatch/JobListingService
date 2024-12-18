@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - main
   pull_request:
     branches:
       - main
@@ -18,31 +19,32 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
+
       # Step 2: Set up .NET
       - name: Set up .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0'  # Replace with your .NET version
+          dotnet-version: '8.0'
 
-      # Step 3: Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore
-
-      # Step 4: Build the application
-      - name: Build the application
-        run: dotnet build --no-restore --configuration Release
-
-      # Step 5: Run tests
-      - name: Run tests
-        run: dotnet test --no-restore --verbosity normal
-
-      # Step 6: Install SonarCloud scanner
-      - name: Install SonarCloud scanner
-        shell: bash
+      # Step 3: Install SonarCloud Scanner
+      - name: Install SonarCloud Scanner
         run: |
-          dotnet tool uninstall --global dotnet-sonarscanner
-          dotnet tool install --global dotnet-sonarscanner --version 8.0.3
+          dotnet tool uninstall --global dotnet-sonarscanner || true
+          dotnet tool install --global dotnet-sonarscanner --version 5.12.0
+
+      # Step 4: Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore JoblistingService.sln
+
+      # Step 5: Build the application
+      - name: Build the application
+        run: dotnet build JoblistingService.sln --no-restore --configuration Release
+
+      # Step 6: Run tests
+      - name: Run tests
+        run: |
+          dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
+            --results-directory "TestResults"
 
       # Step 7: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
@@ -53,16 +55,15 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" 
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
+      # Step 8: Build for SonarCloud Analysis
+      - name: Build for SonarCloud Analysis
+        run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 8: Rebuild for SonarCloud Analysis
-      - name: Build for SonarCloud
-        run: dotnet build --no-restore --configuration Release
-
-      # Step 9: End SonarCloud Analysis
+      # Step 9: SonarCloud Analysis - End
       - name: SonarCloud End Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+          dotnet sonarscanner end

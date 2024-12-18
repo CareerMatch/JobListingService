@@ -51,16 +51,24 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory "TestResults"
 
-            # Step 8: Generate OpenCover Report
-      - name: Generate Coverage Report
+      # Step 8: Generate OpenCover Report
+      - name: Generate OpenCover Report
         run: |
-          dotnet tool install --global dotnet-coverage
+          dotnet tool install --global dotnet-coverage || true
           dotnet-coverage collect \
             --output "coveragereport/coverage.opencover.xml" \
             --output-format opencover \
-            -- dotnet test JoblistingService.Test/JoblistingService.Test.csproj --results-directory "TestResults"
+            -- dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
+              --results-directory "TestResults" \
+              --no-build
 
-      # Step 9: Begin SonarCloud Analysis
+      # Step 9: UTF-8 Encode Coverage Report
+      - name: Encode Coverage Report to UTF-8
+        run: |
+          iconv -f UTF-8 -t UTF-8 -c coveragereport/coverage.opencover.xml -o coveragereport/coverage.encoded.xml
+          mv coveragereport/coverage.encoded.xml coveragereport/coverage.opencover.xml
+
+      # Step 10: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -72,11 +80,11 @@ jobs:
             /d:sonar.coverageReportPaths="coveragereport/coverage.opencover.xml" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
-      # Step 10: Build for SonarCloud Analysis
+      # Step 11: Build for SonarCloud Analysis
       - name: Build for SonarCloud Analysis
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 11: SonarCloud Analysis - End
+      # Step 12: SonarCloud Analysis - End
       - name: SonarCloud End Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

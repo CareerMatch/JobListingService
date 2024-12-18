@@ -1,4 +1,3 @@
-# .github/workflows/cd.yml
 name: CD Workflow
 
 on:
@@ -12,10 +11,15 @@ jobs:
   deploy:
     runs-on: self-hosted
 
+    # Ensure this job only runs if the CI Workflow was successful
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
+
     steps:
+      # Step 1: Check out code
       - name: Check out code
         uses: actions/checkout@v3
 
+      # Step 2: Set Environment Variables for Service
       - name: Set Environment Variables for Service
         env:
           SERVICE_FOLDER: "JoblistingService"
@@ -24,6 +28,7 @@ jobs:
           echo "SERVICE_FOLDER=${SERVICE_FOLDER}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
 
+      # Step 3: Build and Push Docker Image
       - name: Build and Push Docker Image
         env:
           APP_UID: 1000
@@ -32,7 +37,8 @@ jobs:
           docker buildx build --platform linux/amd64,linux/arm64 \
           -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }} ./${{ env.SERVICE_FOLDER }}
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }}      
-          
+      
+      # Step 4: Deploy with Docker Compose
       - name: Deploy with Docker Compose
         env:
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}

@@ -28,7 +28,7 @@ jobs:
 
       # Step 3: Install ReportGenerator
       - name: Install ReportGenerator
-        run: dotnet tool install -g dotnet-reportgenerator-globaltool
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
       # Step 4: Install SonarCloud Scanner
       - name: Install SonarCloud Scanner
@@ -44,22 +44,23 @@ jobs:
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 7: Run tests with Coverlet for Code Coverage
-      - name: Run tests with Coverlet
+      # Step 7: Run tests with Coverage
+      - name: Run tests with Coverage
         run: |
           dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
-          --collect:"XPlat Code Coverage" \
-          --results-directory "TestResults"
+            --collect:"XPlat Code Coverage" \
+            --results-directory "TestResults"
 
-      # Step 8: Generate Coverage Report with ReportGenerator
+      # Step 8: Convert Coverage Report to Cobertura Format
       - name: Generate Coverage Report
         run: |
-          reportgenerator \
-            -reports:"TestResults/**/coverage.cobertura.xml" \
-            -targetdir:"coveragereport" \
-            -reporttypes:"Cobertura"
+          dotnet tool install --global dotnet-coverage
+          dotnet-coverage collect \
+            --output "coveragereport/coverage.cobertura.xml" \
+            --output-format cobertura \
+            -- dotnet test JoblistingService.Test/JoblistingService.Test.csproj --results-directory "TestResults"
 
-      # Step 9: Begin SonarCloud Analysis
+      # Step 9: SonarCloud Analysis - Begin
       - name: SonarCloud Begin Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -68,14 +69,14 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.coverageReportPaths="coveragereport/Cobertura.xml" \
+            /d:sonar.coverageReportPaths="coveragereport/coverage.cobertura.xml" \
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
 
       # Step 10: Build for SonarCloud Analysis
       - name: Build for SonarCloud Analysis
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 11: End SonarCloud Analysis
+      # Step 11: SonarCloud Analysis - End
       - name: SonarCloud End Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

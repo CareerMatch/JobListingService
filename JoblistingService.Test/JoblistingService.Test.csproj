@@ -22,4 +22,8 @@
         <ProjectReference Include="..\JoblistingService\JoblistingService.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TestResults\" />
+    </ItemGroup>
+
 </Project>

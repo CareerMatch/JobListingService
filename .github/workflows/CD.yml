@@ -1,19 +1,13 @@
 name: CD Workflow
 
 on:
-  workflow_run:
-    workflows:
-      - CI Workflow
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: self-hosted
-
-    # Ensure this job only runs if the CI Workflow was successful
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.ref == 'refs/heads/main' }}
-
     steps:
       # Step 1: Check out code
       - name: Check out code

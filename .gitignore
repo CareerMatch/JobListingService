@@ -14,3 +14,6 @@ obj/
 
 # Ignore logs
 *.log
+
+# Ignore files and directories containing '.Development'
+*.*.Development*

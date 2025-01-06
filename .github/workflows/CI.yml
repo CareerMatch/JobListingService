@@ -40,11 +40,14 @@ jobs:
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 6: Run tests
-      - name: Run tests
+      # Step 6: Run tests and collect coverage
+      - name: Run tests with coverage
         run: |
           dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
-            --results-directory "TestResults"
+            --collect:"XPlat Code Coverage" \
+            --results-directory "TestResults" \
+            /p:CoverletOutputFormat=opencover \
+            /p:CoverletOutput=TestResults/coverage.opencover.xml
 
       # Step 7: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
@@ -55,7 +58,8 @@ jobs:
             /k:"CareerMatch_JobListingService" \
             /o:"careermatch" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.cs.opencover.reportsPaths="TestResults/coverage.opencover.xml"
 
       # Step 8: Build for SonarCloud Analysis
       - name: Build for SonarCloud Analysis

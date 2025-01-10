@@ -16,7 +16,7 @@ WORKDIR /src
 COPY JoblistingService.csproj ./
 
 # Restore the project’s dependencies
-RUN dotnet restore "JoblistingService.csproj"
+RUN dotnet restore "JoblistingService.csproj" --disable-parallel
 
 # Copy the rest of the application files to the container
 COPY . .

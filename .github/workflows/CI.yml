@@ -48,10 +48,12 @@ jobs:
         uses: highbyte/sonarscan-dotnet@v2.3.2
         with:
           sonarProjectKey: "CareerMatch_JobListingService" # Replace with your SonarCloud project key
-          sonarOrganization: "careermatch"
+          sonarProjectName: "JobListingService" # Replace with your SonarCloud project name
           sonarHostname: "https://sonarcloud.io" # URL for SonarCloud
+          sonarOrganization: "carermatch"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 7: Cleanup test results
       - name: Cleanup TestResults folder and coverage files

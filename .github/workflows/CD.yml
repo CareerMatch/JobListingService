@@ -4,27 +4,19 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request: 
     branches:
       - main
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       # Step 1: Check out code
       - name: Check out code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Docker Buildx for Multi-Platform Support
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      # Step 3: Log in to DockerHub
-      - name: Log in to DockerHub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      # Step 4: Set Environment Variables for Service
+      # Step 2: Set Environment Variables for Service
       - name: Set Environment Variables for Service
         env:
           SERVICE_FOLDER: "JoblistingService"
@@ -32,27 +24,27 @@ jobs:
         run: |
           echo "SERVICE_FOLDER=${SERVICE_FOLDER}" >> $GITHUB_ENV
           echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+          
+          
+      # Step 2.5: Set up Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      # Step 5: Build and Push Docker Image
+      # Step 3: Build and Push Docker Image
       - name: Build and Push Docker Image
         env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          APP_UID: 1000
         run: |
-          docker buildx build \
-          --platform linux/amd64,linux/arm64 \
-          --tag ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }} \
-          ./${{ env.SERVICE_FOLDER }} \
-          --push
-
-      # Step 6: Deploy with Docker Compose
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker buildx build --platform linux/amd64,linux/arm64 \
+          -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }} ./${{ env.SERVICE_FOLDER }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }}      
+      
+      # Step 4: Deploy with Docker Compose
       - name: Deploy with Docker Compose
         env:
           MONGO_CONNECTION_STRING: ${{ secrets.MONGO_CONNECTION_STRING }}
           MONGO_DATABASE_NAME: ${{ secrets.MONGO_DATABASE_NAME }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          IMAGE_TAG: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_TAG }}
         run: |
-          sed -i 's|<IMAGE_TAG>|${IMAGE_TAG}|g' docker-compose.yml
-          sed -i 's|<MONGO_CONNECTION_STRING>|${MONGO_CONNECTION_STRING}|g' docker-compose.yml
-          sed -i 's|<MONGO_DATABASE_NAME>|${MONGO_DATABASE_NAME}|g' docker-compose.yml
           docker-compose -f ./docker-compose.yml up -d

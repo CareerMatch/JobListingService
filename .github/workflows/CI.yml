@@ -50,7 +50,7 @@ jobs:
           sonarProjectKey: "CareerMatch_JobListingService" # Replace with your SonarCloud project key
           sonarProjectName: "JobListingService" # Replace with your SonarCloud project name
           sonarHostname: "https://sonarcloud.io" # URL for SonarCloud
-          sonarOrganization: "carermatch"
+          sonarOrganization: "careermatch"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

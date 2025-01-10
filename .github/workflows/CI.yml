@@ -48,7 +48,7 @@ jobs:
         uses: highbyte/sonarscan-dotnet@v2.3.2
         with:
           sonarProjectKey: "CareerMatch_JobListingService" # Replace with your SonarCloud project key
-          sonarProjectName: "CareerMatch JobListing Service" # Replace with your SonarCloud project name
+          sonarOrganization: "careermatch"
           sonarHostname: "https://sonarcloud.io" # URL for SonarCloud
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

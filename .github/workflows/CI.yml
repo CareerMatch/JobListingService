@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Check out code
@@ -26,21 +26,28 @@ jobs:
         with:
           dotnet-version: '8.0'
 
-      # Step 3: Install SonarCloud Scanner
+      # Step 3: Set up Java 17 for SonarCloud
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # Step 4: Install SonarCloud Scanner
       - name: Install SonarCloud Scanner
         run: |
           dotnet tool uninstall --global dotnet-sonarscanner || true
           dotnet tool install --global dotnet-sonarscanner --version 5.12.0
 
-      # Step 4: Restore dependencies
+      # Step 5: Restore dependencies
       - name: Restore dependencies
         run: dotnet restore JoblistingService.sln
 
-      # Step 5: Build the application
+      # Step 6: Build the application
       - name: Build the application
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 6: Run tests
+      # Step 7: Run tests
       - name: Run tests
         run: |
           dotnet test JoblistingService.Test/JoblistingService.Test.csproj \
@@ -49,7 +56,7 @@ jobs:
             /p:CoverletOutput=JoblistingService.Test/TestResults/coverage.cobertura.xml \
             /p:CoverletOutputFormat=cobertura
 
-      # Step 7: Begin SonarCloud Analysis
+      # Step 8: Begin SonarCloud Analysis
       - name: SonarCloud Begin Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -61,18 +68,18 @@ jobs:
             /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.cobertura.reportPaths="JoblistingService.Test/TestResults/**/coverage.cobertura.xml"
 
-      # Step 8: Build for SonarCloud Analysis
+      # Step 9: Build for SonarCloud Analysis
       - name: Build for SonarCloud Analysis
         run: dotnet build JoblistingService.sln --no-restore --configuration Release
 
-      # Step 9: SonarCloud Analysis - End
+      # Step 10: SonarCloud Analysis - End
       - name: SonarCloud End Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet sonarscanner end
 
-      # Step 10: Cleanup test results
+      # Step 11: Cleanup test results
       - name: Cleanup TestResults folder and coverage files
         run: |
           rm -rf JoblistingService.Test/TestResults

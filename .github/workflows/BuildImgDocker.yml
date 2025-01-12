@@ -6,6 +6,10 @@ on:
       - main
       - dev
 
+permissions:
+  contents: read
+  id-token: write  # Allow id-token for nested workflows
+
 jobs:
   build:
     runs-on: ubuntu-latest

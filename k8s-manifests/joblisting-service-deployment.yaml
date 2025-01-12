@@ -34,7 +34,7 @@ spec:
                   key: MongoDbSettings__DatabaseName
             - name: Redis__ConnectionString
               value: redis:6379
-          image: hobingantuk/joblisting-services:v1
+          image: hobingantuk/joblisting-services:prod
           imagePullPolicy: Always
           name: joblisting-service
           ports:

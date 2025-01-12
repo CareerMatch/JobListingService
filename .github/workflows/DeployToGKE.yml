@@ -26,7 +26,7 @@ jobs:
 
       - name: Configure kubectl
         run: |
-          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${{ secrets.GKE_ZONE }} --project ${{ secrets.GKE_PROJECT }}
+          gcloud container clusters get-credentials careermatch --zone europe-west4 --project ${{ secrets.GKE_PROJECT }}
 
       - name: Create Kubernetes Secrets
         run: |

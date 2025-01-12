@@ -1,0 +1,40 @@
+name: Deploy Joblisting to GKE
+
+on:
+  workflow_call:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: "projects/${{ secrets.GKE_PROJECT }}/locations/global/workloadIdentityPools/github-action-pool/providers/github-action-provider"
+          service_account: ${{ secrets.GKE_SERVICE_ACCOUNT }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GKE_PROJECT }}
+
+      - name: Configure kubectl
+        run: |
+          gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER }} --zone ${{ secrets.GKE_ZONE }} --project ${{ secrets.GKE_PROJECT }}
+
+      - name: Create Kubernetes Secrets
+        run: |
+          kubectl create secret generic joblisting-secret \
+            --from-literal=MongoDbSettings__ConnectionString=${{ secrets.MONGO_CONNECTION_STRING }} \
+            --from-literal=MongoDbSettings__DatabaseName=${{ secrets.MONGO_DATABASE_NAME }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to GKE
+        run: |
+          kubectl apply -f ./k8s-manifests/

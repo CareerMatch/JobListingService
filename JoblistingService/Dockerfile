@@ -1,8 +1,7 @@
 ﻿# Base image for runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
+EXPOSE 9002
 
 # Build stage
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -30,4 +29,5 @@ RUN dotnet publish -a $TARGETARCH "JoblistingService.csproj" -c Release -o /app/
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+ENV ASPNETCORE_URLS=http://+:9002
 ENTRYPOINT ["dotnet", "JoblistingService.dll"]

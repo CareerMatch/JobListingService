@@ -16,30 +16,20 @@ jobs:
 
       # Step 2: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: "projects/${{ secrets.GKE_PROJECT }}/locations/global/workloadIdentityPools/github-action-pool/providers/github-action-provider"
           service_account: ${{ secrets.GKE_SERVICE_ACCOUNT }}
 
-      # Step 3: Set up Google Cloud SDK
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+      # Step 3: Configure kubectl with GKE credentials
+      - name: Configure GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
         with:
+          cluster_name: careermatch
+          location: europe-west4
           project_id: ${{ secrets.GKE_PROJECT_ID }}
 
-      # Step 4: Install gke-gcloud-auth-plugin
-      - name: Install gke-gcloud-auth-plugin
-        run: |
-          sudo apt-get update && sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
-
-      # Step 5: Configure kubectl
-      - name: Configure kubectl
-        env:
-          USE_GKE_GCLOUD_AUTH_PLUGIN: "true"
-        run: |
-          gcloud container clusters get-credentials careermatch --zone europe-west4 --project ${{ secrets.GKE_PROJECT_ID }}
-
-      # Step 6: Create Kubernetes Secrets
+      # Step 4: Create Kubernetes Secrets
       - name: Create Kubernetes Secrets
         run: |
           kubectl create secret generic joblisting-secret \
@@ -47,7 +37,7 @@ jobs:
             --from-literal=MongoDbSettings__DatabaseName=${{ secrets.MONGO_DATABASE_NAME }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
-      # Step 7: Deploy to GKE
+      # Step 5: Deploy to GKE
       - name: Deploy to GKE
         run: |
           kubectl apply -f ./k8s-manifests/
